@@ -2,8 +2,7 @@ const mongoose = require("mongoose");
 
 const app = require("./app");
 
-const DB_HOST =
-  "mongodb+srv://Yevgenii:7swzyOWpmCyWIpsT@cluster0.tgychmv.mongodb.net/db-contacts?retryWrites=true&w=majority";
+const { DB_HOST } = require("./confiq");
 
 mongoose
   .connect(DB_HOST)
