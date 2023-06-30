@@ -1,3 +1,7 @@
+const fs = require("fs/promises");
+const path = require("path");
+const gravatar = require("gravatar");
+const Jimp = require("jimp");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 
@@ -9,8 +13,11 @@ const { ctrlWrapper } = require("../decorators");
 
 const { SECRET_KEY } = process.env;
 
+const usersDir = path.resolve("public", "avatars");
+
 const register = async (req, res) => {
   const { email, password } = req.body;
+  const url = gravatar.url(email, { s: 250 });
   const user = await User.findOne({ email });
   if (user) {
     throw HttpError(409, "Email in use");
@@ -18,7 +25,11 @@ const register = async (req, res) => {
 
   const hashPassword = await bcrypt.hash(password, 10);
 
-  const newUser = await User.create({ ...req.body, password: hashPassword });
+  const newUser = await User.create({
+    ...req.body,
+    avatarURL: url,
+    password: hashPassword,
+  });
 
   res.status(201).json({
     user: {
@@ -73,9 +84,30 @@ const logout = async (req, res) => {
   res.status(204).json();
 };
 
+const changeAvatar = async (req, res) => {
+  const { path: oldPath, filename } = req.file;
+  const newPath = path.join(usersDir, filename);
+  const avatarURL = path.join("public", "avatars", filename);
+
+  const imageJimp = await Jimp.read(oldPath);
+  await imageJimp.resize(250, 250, Jimp.RESIZE_BEZIER);
+  await imageJimp.writeAsync(oldPath);
+
+  fs.rename(oldPath, newPath);
+
+  const { _id } = req.user;
+  const user = await User.findByIdAndUpdate(_id, { avatarURL }, { new: true });
+  if (!user) {
+    throw HttpError(404, "Not found");
+  }
+
+  res.status(200).json({ avatarURL });
+};
+
 module.exports = {
   register: ctrlWrapper(register),
   login: ctrlWrapper(login),
   getCurrent: ctrlWrapper(getCurrent),
   logout: ctrlWrapper(logout),
+  changeAvatar: ctrlWrapper(changeAvatar),
 };
