@@ -87,7 +87,7 @@ const logout = async (req, res) => {
 const changeAvatar = async (req, res) => {
   const { path: oldPath, filename } = req.file;
   const newPath = path.join(usersDir, filename);
-  const avatarURL = path.join("public", "avatars", filename);
+  const avatarURL = path.join("avatars", filename);
 
   const imageJimp = await Jimp.read(oldPath);
   await imageJimp.resize(250, 250, Jimp.RESIZE_BEZIER);
