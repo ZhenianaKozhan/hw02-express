@@ -6,9 +6,11 @@ const {
   getCurrent,
   logout,
   changeAvatar,
+  verify,
+  resendVerify,
 } = require("../../controllers/authController");
 
-const { userSchema } = require("../../schemas/users");
+const { userSchema, userEmailSchema } = require("../../schemas/users");
 
 const { validateBody } = require("../../decorators");
 
@@ -17,6 +19,10 @@ const { authenticate, upload } = require("../../middlewares");
 const router = express.Router();
 
 router.post("/register", validateBody(userSchema), register);
+
+router.get("/verify/:verificationCode", verify);
+
+router.post("/verify", validateBody(userEmailSchema), resendVerify);
 
 router.post("/login", validateBody(userSchema), login);
 
